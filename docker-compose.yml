@@ -1,0 +1,91 @@
+# version: '3.9'
+
+services:
+  client:
+    build: ./client
+    environment:
+      CHOKIDAR_USEPOLLING: "true" 
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./client:/client
+      - /client/node_modules
+    depends_on:
+      - server
+  gateway:
+    build: ./server/gateway
+    environment:
+      PORT: 4000
+      CHOKIDAR_USEPOLLING: "true"
+      # DATABASE_URL: ${DATABASE_URL}
+    ports:
+      - "4000:4000"
+    volumes:
+      - ./server/gateway:/gateway
+      - /server/gateway/node_modules      
+    depends_on:
+      user-service: 
+        condition: service_healthy
+      post-service:
+        condition: service_healthy
+  user-service:
+    build: ./server/user-service
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4002"]
+      interval: 5s
+      timeout: 2s
+      retries: 5
+    environment:
+      PORT: 4002
+      CHOKIDAR_USEPOLLING: "true"
+      DATABASE_URL: ${DATABASE_URL_USER_DB}
+    ports:
+      - "4002:4002"
+    volumes:
+      - ./server/user-service:/user-service
+      - /server/user-service/node_modules      
+    depends_on:
+       - user-db
+  post-service:     
+    build: ./server/post-service
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4001"]
+      interval: 5s
+      timeout: 2s
+      retries: 5
+    environment:
+      PORT: 4001
+      CHOKIDAR_USEPOLLING: "true"
+      DATABASE_URL: ${DATABASE_URL_POST_DB}
+    ports:
+      - "4001:4001"
+    volumes:
+      - ./server/post-service:/post-service
+      - /server/post-service/node_modules      
+    depends_on:
+       - post-db   
+  user-db:
+    image: postgres:16
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_user_data:/var/lib/postgresql/data      
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: qwerty123
+      POSTGRES_DB: user
+  post-db:
+    image: postgres:16
+    ports:
+      - "5434:5433"
+    volumes:
+      - postgres_post_data:/var/lib/postgresql/data      
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: qwerty123
+      POSTGRES_DB: post
+
+  
+volumes:
+  postgres_user_data:
+  postgres_post_data:
