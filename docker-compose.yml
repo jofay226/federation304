@@ -11,7 +11,7 @@ services:
       - ./client:/client
       - /client/node_modules
     depends_on:
-      - server
+      - gateway
   gateway:
     build: ./server/gateway
     environment:
@@ -77,7 +77,7 @@ services:
   post-db:
     image: postgres:16
     ports:
-      - "5434:5433"
+      - "5434:5432"
     volumes:
       - postgres_post_data:/var/lib/postgresql/data      
     environment:

@@ -11,26 +11,31 @@ const typeDefs = gql`
     )
 
   type Query {
-    me: User
+    Users: [User]
   }
 
   type User @key(fields: "id") {
     id: ID!
-    username: String
+    name: String
+    email: String
   }
 `;
 
 const resolvers = {
   Query: {
-    me() {
-      return { id: '1', username: '@ava' };
+    Users : () =>  {
+      return [{ id: '1', name: 'ava', email: "ava@gmail.com" }];
     },
   },
+
   User: {
-    __resolveReference(user, { fetchUserById }) {
-      return fetchUserById(user.id);
+    __resolveReference : (ref) =>  {
+      console.log("user __resolveReference");
+      console.log(ref);
+      return { id: '1', name: 'ava', email: "ava@gmail.com" };
     },
   },
+
 };
 
 const server = new ApolloServer({
@@ -41,3 +46,6 @@ const { url } = await startStandaloneServer(server, {
   listen: {port: 4002}
 });
 console.log(`🚀  Server ready at ${url}`);
+
+
+

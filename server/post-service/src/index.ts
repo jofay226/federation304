@@ -11,26 +11,36 @@ const typeDefs = gql`
     )
 
   type Query {
-    me: User
+    Posts: [Post!]!
+  }
+
+  type Post {
+    id: ID!
+    title: String!
+    description: String!
+    authorId: ID!
+    author: User!
   }
 
   type User @key(fields: "id") {
     id: ID!
-    username: String
   }
 `;
 
 const resolvers = {
   Query: {
-    me() {
-      return { id: '1', username: '@ava' };
+    Posts: () =>  {
+      return [{ id: '1', title: '@ava', description: 'hfdskjfjdsk', authorId: "67"}];
     },
   },
-  User: {
-    __resolveReference(user, { fetchUserById }) {
-      return fetchUserById(user.id);
-    },
-  },
+
+  Post: {
+    author: (parent: any) => {
+      console.log('post resolver');
+      console.log(parent);
+      return {__typename: "User", id: parent.authorId}
+    }
+  }
 };
 
 const server = new ApolloServer({
